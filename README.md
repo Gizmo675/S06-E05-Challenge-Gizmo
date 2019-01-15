@@ -1,167 +1,60 @@
-# S06-E05-Challenge-Gizmo
+# Frontend
 
-# Ajout d'une liste
+Ce dépôt sera ton dépôt côté **Front** pour toute la saison.
 
-On a déjà fait en sorte d'intercepter le formulaire d'ajout d'une liste :muscle:
+Tu peux coder chaque journée dans une branche spécifique pour t'y retrouver (et potentiellement reprendre le code du prof).
 
-On veut désormais envoyer une requête Ajax demandant à notre partie backend d'ajouter la liste dans la base données. Oui, rien que ça :wink:
+## Code fourni
 
-## Ajax :lipstick:
+- utilise le [Framework CSS Bulma](https://bulma.io/)
+- donc la [documentation de Bulma](https://bulma.io/documentation/columns/) te sera utile :wink:
+- il y a un peu de Javascript Vanilla (cliques sur _ajouter une liste_)
 
-- sur le dépôt **Frontend**
-- intercepter le formulaire d'ajout de liste (si ce n'est pas déjà fait)
-- récupérer la valeur de l'input du formulaire (si ce n'est pas déjà fait)
-- faire une requête Ajax sur le **endpoint** prévu pour l'ajout d'une liste
-    - on a rédigé la doc à la première journée
-    - l'URL du **endpoint** est sur `http://api.okanban.local` si configuré (à priori non :p), sinon sur une URL du type `http://localhost/.../s06e01-backend/`
-    - envoyer les données nécessaires
-    - pour l'instant le **endpoint** ne fonctionne pas
-- en cas de succès de la requête Ajax, ajouter la liste dans le DOM
+## Exercice du jour
 
-## Backend :muscle:
+Comme tu le sais, oKanban, c'est un peu comme Trello mais _que c'est nous qu'on l'a fait_ :heart_eyes:
 
-- sur le dépôt **Backend**
-- on veut que ce code JSON soit désormais généré au sein de notre API
-- on doit coder le **endpoint** qui s'occupe de la création de liste
-- tout a été prévu dans la documentation rédigée à la première journée de cette saison
-- => le **endpoint** est `/lists/add`
-- si la route n'est pas encore écrite dans le repo _Backend_, il faut l'ajouter
-- la méthode du _Controller_ devra :
-    - récupérer le nom de la liste (on donnera un ordre élevé par défaut)
-    - utiliser nos _Model_ afin d'ajouter une nouvelle liste
-    - puis afficher en JSON les données sur la liste ajoutée (encoder l'objet est suffisant mais peut entrainer des erreurs => voir plus bas)
-- pour l'affichage et l'encodage en JSON, on va se créer une petite méthode `showJson` dans _CoreController_ afin qu'elle puisse profiter à tous les _Controllers_
+Aujourd'hui, on va apprivoiser **jQuery** avec quelques petites intéractions sympas, côté client (navigateur).
 
-<details><summary>Méthode showJson($data)</summary>
+### Etape 1 - jQuery
 
-```php
+- remplacer le code Javascript _Vanilla_ existant par sa version **jQuery**
+- documentation [jQuery](https://api.jquery.com/)
 
-// A ajouter dans la classe CoreController
+### Etape 2 - Modification du nom
 
-protected function showJson($data)
-{
-    // Autorise l'accès à la ressource depuis n'importe quel autre domaine
-    header("Access-Control-Allow-Origin: *");
-    header('Access-Control-Allow-Credentials: true');
-    // Dit au navigateur que la réponse est au format JSON
-    header('Content-Type: application/json');
-    // La réponse en JSON est affichée
-    echo json_encode($data);
-}
-```
+- afficher le formulaire de modification du nom lors du double-clic sur le nom d'une liste
+
+<details><summary>Plan</summary>
+
+- intercepter l'évènement `dblclick` sur le nom des listes
+- cacher l'élément lié à l'event (`evt.target` ou `this`)
+- récupérer l'élément `<form>` "suivant" avec jQuery
+- afficher cet élément
 
 </details>
 
-### Erreur : Le JSON généré est vide
+### Etape 3 - Ajouter le bouton d'ajout avec jQuery
 
-- **C'est normal**, c'est parce que nos propriétés ne sont pas `public` :sob:
-- il faut suivre les instructions suivantes pour résoudre le problème (ou bien passer toutes les propriétés en `public`)
-    - dans le _CoreModel_, ajouter le code suivant `implements \JsonSerializable`
-    - on obtient ainsi `abstract class CoreModel implements \JsonSerializable {`
-    - ensuite, dans chaque _Model_ enfant, déclarer une méthode `jsonSerialize()` retournant le tableau qu'on souhaite convertir en JSON
-    - la fonction `json_encode` va automatiquement récupérer le retour de cette méthode comme base à convertir en JSON
-    - on peut s'aider du code donné ci-dessous pour un _Model_ puis essayer de le faire seul pour les autres
+- commenter les lignes HTML correspondant au bouton `Ajouter une liste`
+- générer ce bouton en Javascript avec **jQuery** au chargement de la page
+- pour créer un élément `<div>` avec jQuery, il faut :
+    - écrire `$('<div>')`
+    - stocker l'élément dans une variable `var $maDiv = $('<div>');`
+    - ajouter un classe si on le souhaite `$maDiv.addClass('toto');`
+    - enfin, l'ajouter dans le DOM, dans un élément choisi (ciblé) :
+        - 1ère façon : `$('#idDestination').append($maDiv);`
+        - 2ème façon : `$maDiv.appendTo('#idDestination');`
 
-<details><summary>jsonSerialize() pour LabelModel</summary>
+<details><summary>Plan</summary>
 
-```php
-
-namespace oFramework\Models;
-
-class LabelModel extends CoreModel {
-    /** @var string */
-    private $name;
-
-    // ...
-
-    public function jsonSerialize() {
-        // Ce tableau retournée sera convertit en JSON par la fonction json_encode
-        // lorsque que j'appelle : json_encode($labelModel);
-        // où $labelModel est un objet de la classe LabelModel
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            // je choisis de ne pas y placer created_at et updated_at
-        ];
-    }
-}
-```
+- dans `app.init`, appeler une nouvelle méthode de app : `addListAddingButton`
+- cette méthode contiendra tout le code nécessaire à la création du bouton
+- créer chaque élément (avec leurs classes) composant le bouton individuellement, et les stocker dans des variables
+- utiliser `append()` ou `appendTo` pour ajouter un élément dans un autre
+    - exemple : `$monSpan.appendTo($maDiv)` où `$monSpan` est un élément `<span>` créé en jQuery, et `$maDiv` est un élément `<div>` créé en jQuery
+    - donc on n'ajoute rien dans le DOM pour l'instant
+- une fois les éléments intégrés dans leur "parent", on peut ajouter l'élément qui contient tous les autres (`<div class="column">`), dans le DOM
+- s'il y a une interception d'évènement sur ce bouton "Ajouter une liste", il faut donc que le bouton soit créé avant que l'interception d'évènement ne soit configurée
 
 </details>
-
-<details><summary>jsonSerialize() pour CardModel</summary>
-
-```php
-
-namespace oFramework\Models;
-
-class CardModel extends CoreModel {
-    /** @var string */
-    private $title;
-    /** @var int */
-    private $list_order;
-    /** @var int */
-    private $list_id;
-
-    // ...
-
-    public function jsonSerialize() {
-        // Ce tableau retournée sera convertit en JSON par la fonction json_encode
-        // lorsque que j'appelle : json_encode($cardModel);
-        // où $cardModel est un objet de la classe CardModel
-        return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'list_order' => $this->list_order,
-            'list_id' => $this->list_id,
-            // je choisis de ne pas y placer created_at et updated_at
-        ];
-    }
-}
-```
-
-</details>
-
-<details><summary>jsonSerialize() pour ListModel</summary>
-
-```php
-
-namespace oFramework\Models;
-
-class ListModel extends CoreModel {
-    /** @var string */
-    private $name;
-    /** @var int */
-    private $page_order;
-
-    // ...
-
-    public function jsonSerialize() {
-        // Ce tableau retournée sera convertit en JSON par la fonction json_encode
-        // lorsque que j'appelle : json_encode($listModel);
-        // où $listModel est un objet de la classe ListModel
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'page_order' => $this->page_order,
-            // je choisis de ne pas y placer created_at et updated_at
-        ];
-    }
-}
-```
-
-</details>
-
-## Ajax, le retour
-
-- sur le dépôt **Frontend** (quelque part sur une URL du genre `http://localhost/.../s06e03-front-end/`)
-- maintenant que le **endpoint** a été mis en place, on peut tester si l'ajout d'une liste fonctionne bien (bon message côté front et liste bien ajoutée dans la table `list`)
-- si ce n'est pas le cas, ajouter des `console.log()` régulièrement
-
-## BONUS - Endpoints
-
-- sur le dépôt **Backend**
-- mettre en place les **endpoints** suivants :
-    - `/lists`
-    - `/lists/[id]/cards`
-    - `/lists/[id]/update`

@@ -1,9 +1,28 @@
+/**
+ * Etapes pour afficher les listes et les cartes dynamiquement
+ * On doit récupérer les listes (en dur ou AJAX)
+ * On boucle sur ces listes
+ * - on utilise addListHtml() pour afficher chaque liste
+ */
+
 var app = {
+  /**
+   * Initialisation de l'application et notamment des event listeners
+   */
   init: function() {
     console.log('init');
 
-     // Ajouter le bouton d'ajout d'une liste
-     app.displayAddListButton();
+    // On efface le contenu de #lists
+    // $('#lists').empty();
+
+    // Ajouter le bouton d'ajout d'une liste
+    app.displayAddListButton();
+
+    // Chargement des listes
+    app.addListsFromJson();
+
+    // Chargement des cartes
+    app.addCardsFromJson();
 
     // ajout de la gestion de l'event click sur le bouton d'ajout de liste
     // jQuery : https://api.jquery.com/on/
@@ -29,34 +48,106 @@ var app = {
     $('#addListModal form').on('submit', app.submitNewListForm);
   },
 
+  /**
+   * Ajout des listes depuis lists.js
+   */
+  addListsFromJson: function() {
+    // On parcours les listes
+    // cf : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Array/forEach
+    lists.forEach(function(list) {
+      app.addListHtml(list);
+    });
+  },
+  
+
+  /**
+   * Ajout des cartes depuis cards.js
+   */
+  addCardsFromJson: function() {
+    // On parcours les cartes
+    // cf : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Array/forEach
+    cards.forEach(function(card) {
+      app.addCardHtml(card);
+    });
+  },
+
+  addCardHtml: function(card) {
+    // Technique alternative : on va chercher le template contenu dans le HTML
+    var cardTemplate = $('#card-template').html();
+    // On remplace le placeholder (la variable) {{name}} par le contenu de la carte
+    var cardHtml = cardTemplate.replace('{{name}}', card.name);
+    // On affiche la carte dans la liste associé à l'id de list contenu dans la carte
+    $('div[data-id="' + card.list + '"] .panel-block').append(cardHtml);
+  },
+  
+  /**
+   * Articule l'ajout d'une nouvelle liste
+   */
   submitNewListForm: function(evt) {
     // désactiver le fonctionnement par défaut
     evt.preventDefault();
     // récupérer la valeur dans l'input du formulaire
     var $form = $(this); // this = evt.target
     var listName = $form.find('input[name="list-name"]').val();
-    // appeler la méthode app.generateListElement (à créer à l'étape suivante) en donnant la valeur récupérée (de l'input) en argument
-    // récupérer le retour de la méthode dans une variable
-    var htmlList = app.generateListElement(listName);
-    // Afficher la liste avant la dernière colonne
-    // Le sélecteur CSS "même complexe" est compris par jQuery
-    $('#lists > .column:last-child').before(htmlList);
+    
+    // On appelle la fonction listAddJson avec le nom de la liste
+    app.listAddJson(listName);
     // Fermeture modale
     $('#addListModal').removeClass('is-active');
   },
 
-  generateListElement: function (listName) {
+  listAddJson: function (listName) {
+    $.ajax({
+      // URL sur laquelle faire l'appel Ajax
+      url: 'http://localhost/nova/s06/s06e01-backend/public/lists/add',
+      method: 'POST', // La méthode HTTP pour l'appel Ajax (GET ou POST)
+      dataType: 'json', // Le type de données attendu en réponse
+      data: {
+        title: listName,
+      }
+    }).done(function (response) { // en cas de succès de la requête
+      console.log(response); // debug
+      // La réponse, dans ce cas, est un JSON contenant le titre de la liste
+      // On envoie donc cet objet pour être traité par une fonction
+      // ...celle qui se charge de créer et d'afficher la liste
+      app.addListHtml(response);
+    }).fail(function () { // en cas d'échec de la requête
+      alert('Erreur de retour serveur');
+    });
+  },
+
+  /**
+   * Crée un élement HTML de liste vide et l'ajoute au DOM
+   * et ferme la fenêtre modale
+   */
+  addListHtml: function(listJson) {
+    // appeler la méthode app.generateListElement (à créer à l'étape suivante) en donnant la valeur récupérée (de l'input) en argument
+    // récupérer le retour de la méthode dans une variable
+    var htmlList = app.generateListElement(listJson);
+    // Afficher la liste avant la dernière colonne
+    // Le sélecteur CSS "même complexe" est compris par jQuery
+    $('#lists > .column:last-child').before(htmlList);
+  },
+
+  /**
+   * Génère le html d'une liste vide et le retourne
+   */
+  generateListElement: function (list) {
     // Création de l'élément et stockage dans une variable
     // $listElement => $ car c'est un élément jQuery
     $listElement = $('<div>'); // <div></div>
     // On ajoute les classes sur l'élément, et on enchaine les méthodes => "chaînage"
     $listElement.addClass('column').addClass('is-one-quarter').addClass('panel');
+    // On ajoute un data-id à cette liste
+    // cf : https://developer.mozilla.org/fr/docs/Web/HTML/Attributs_universels/data-*
+    // cf : https://api.jquery.com/data/#data-key-value
+    $listElement.attr('data-id', list.id); // cela va créer une attribut data-id="3"
 
     // Trop de balise, on va gagner du temps à passer par le code HTML qui permet aussi de générer des éléments
     // il faut mettre un \ à la fin de chaque ligne de la chaine de caractères
     var headingHTML = "<div class=\"columns\"> \
         <div class=\"column\"> \
-            <h2 class=\"has-text-white\">" + listName + "</h2> \
+            <h2 class=\"has-text-white\">" + list.title + "</h2> \
             \
             <form action=\"\" method=\"POST\" class=\"is-hidden editListTitleForm \"> \
                 <input type=\"hidden\" name=\"list-id\" value=\"1\"> \
@@ -92,6 +183,9 @@ var app = {
     return $listElement;
   },
 
+  /**
+   * Soumission formulaire edition nom d'une liste
+   */
   submitEditListForm: function(evt) {
     // Désactiver la soumission du formulaire
     evt.preventDefault();
@@ -111,6 +205,9 @@ var app = {
     $h2element.removeClass('is-hidden');
   },
 
+  /**
+   * Affiche le formulaire d'édition d'une liste existante
+   */
   displayEditListForm: function(evt) {
     // console.log(evt); // Evenement
     // console.log(this); // ici, this = evt.target
@@ -135,6 +232,9 @@ var app = {
     $input.val(h2value);
   },
 
+  /**
+   * Affiche la fenêtre modale
+   */
   displayAddListModal: function(evt) {
     // Récupération de l'élément Modal
     var modal = $('#addListModal');
@@ -144,6 +244,9 @@ var app = {
     // $('#addListModal').addClass('is-active');
   },
 
+  /**
+   * Création dynamique du bouton d'ajout de liste
+   */
   displayAddListButton: function () {
     // <div class="column">
     //     <button class="button is-success" id="addListButton">
@@ -174,6 +277,6 @@ var app = {
 // (sans les fichiers externes)
 // document.addEventListener('DOMContentLoaded', app.init);
 // jQuery : https://api.jquery.com/ready/
-$(document).ready(app.init);
+// $(document).ready(app.init);
 // Encore plus court
-// $(app.init);
+$(app.init);

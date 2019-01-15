@@ -1,14 +1,14 @@
 var lists = [
   {
     id: 1,
-    name: 'Perso'
+    title: 'Perso'
   },
   {
     id: 2,
-    name: 'PHP'
+    title: 'PHP'
   },
   {
     id: 4,
-    name: 'Javascript'
+    title: 'Javascript'
   }
 ];

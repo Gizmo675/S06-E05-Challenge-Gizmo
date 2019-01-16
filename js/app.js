@@ -65,7 +65,15 @@ var app = {
       data: {
         title: Name,
             }
-          })
+          }).done(function (response) { // en cas de succès de la requête
+            console.log(response); // debug
+            // La réponse, dans ce cas, est un JSON contenant le titre de la liste
+            // On envoie donc cet objet pour être traité par une fonction
+            // ...celle qui se charge de créer et d'afficher la liste
+            app.addListHtml(response);
+          }).fail(function () { // en cas d'échec de la requête
+            alert('Erreur de retour serveur');
+          });
   },
   
 

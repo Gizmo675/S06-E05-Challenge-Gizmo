@@ -54,9 +54,18 @@ var app = {
   addListsFromJson: function() {
     // On parcours les listes
     // cf : https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Array/forEach
-    lists.forEach(function(list) {
+    /*lists.forEach(function(list) {
       app.addListHtml(list);
-    });
+    });*/
+    $.ajax({
+      // URL sur laquelle faire l'appel Ajax
+      url: 'http://localhost/S06/E01/s06e01-backend-blue/public/lists',
+      method: 'POST', // La méthode HTTP pour l'appel Ajax (GET ou POST)
+      dataType: 'json', // Le type de données attendu en réponse
+      data: {
+        title: Name,
+            }
+          })
   },
   
 
@@ -96,10 +105,11 @@ var app = {
     $('#addListModal').removeClass('is-active');
   },
 
-  listAddJson: function (listName) {
+  listAddJson: function (listName) 
+  {
     $.ajax({
       // URL sur laquelle faire l'appel Ajax
-      url: 'http://localhost/nova/s06/s06e01-backend/public/lists/add',
+      url: 'http://localhost/S06/E01/s06e01-backend-blue/public/lists/add',
       method: 'POST', // La méthode HTTP pour l'appel Ajax (GET ou POST)
       dataType: 'json', // Le type de données attendu en réponse
       data: {
@@ -115,6 +125,31 @@ var app = {
       alert('Erreur de retour serveur');
     });
   },
+
+  /*
+  listJson: function ()
+  {
+    $.ajax(
+      {
+        // URL sur laquelle faire l'appel Ajax
+        url: 'http://localhost/S06/E01/s06e01-backend-blue/public/lists',
+        method: 'POST', // La méthode HTTP pour l'appel Ajax (GET ou POST)
+        dataType: 'json', // Le type de données attendu en réponse
+        data: {
+          title: listName,
+              }
+      }
+      ).done(function (response) { // en cas de succès de la requête
+        console.log(response); // debug
+        // La réponse, dans ce cas, est un JSON contenant le titre de la liste
+        // On envoie donc cet objet pour être traité par une fonction
+        // ...celle qui se charge de créer et d'afficher la liste
+        app.addListHtml(response);
+      }).fail(function () { // en cas d'échec de la requête
+        alert('Erreur de retour serveur');
+      });
+  },
+*/
 
   /**
    * Crée un élement HTML de liste vide et l'ajoute au DOM
